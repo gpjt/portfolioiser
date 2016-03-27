@@ -8,6 +8,7 @@ import time
 
 start = datetime.datetime(2011, 1, 1)
 end = datetime.datetime(2015, 12, 31)
+retries = 2
 
 for filename in ("ishares.csv", "vanguard.csv"):
     print("Loading {}".format(filename))
@@ -17,7 +18,7 @@ for filename in ("ishares.csv", "vanguard.csv"):
             ticker = row[0]
 
             print("About to read data for {}".format(ticker))
-            for retry in range(2):
+            for retry in range(retries):
                 try:
                     frame = datareader.DataReader(ticker, "yahoo", start, end)
                     print("Done reading data for {}, storing".format(ticker))
@@ -25,5 +26,8 @@ for filename in ("ishares.csv", "vanguard.csv"):
                     print("Done storing {}".format(ticker))
                     break
                 except:
-                    print("Got an error loading {}, will pause and retry".format(ticker))
-                    time.sleep(5)
+                    if retry < retries - 1:
+                        print("Got an error loading {}, will pause and retry".format(ticker))
+                        time.sleep(5)
+                    else:
+                        print("Giving up on {}".format(ticker))
