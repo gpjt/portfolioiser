@@ -7,7 +7,7 @@ import pandas_datareader.data as datareader
 import time
 
 start = datetime.datetime(2011, 1, 1)
-end = datetime.datetime(2015, 12, 31)
+end = datetime.datetime.now()
 retries = 2
 
 for filename in ("ishares.csv", "vanguard.csv"):
