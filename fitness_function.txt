@@ -1,0 +1,11 @@
+
+
+def judge_fitness(portfolio, start_time, end_time):
+    starting_value = 100000
+    create the portfolio based on starting value at the start time
+    generate daily values
+    work out the end value
+    work out the SD
+    work out the maximum fall
+    work out the maximum rise
+    combine them all together, generate a result
