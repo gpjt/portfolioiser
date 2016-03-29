@@ -148,25 +148,21 @@ class TestPortfolio(unittest.TestCase):
 
         expected_ticker1_holding = (10000 / 1) * 40
         expected_ticker2_holding = (10000 / 2) * 60
-        print(ticker1_frame)
-        print(ticker2_frame)
-        print(trace.frame)
-        self.assertEqual(
-            trace.frame,
-            pd.DataFrame({
-                "Close": pd.Series(
-                    [
-                        expected_ticker1_holding * 1 + expected_ticker2_holding * 2,
-                        expected_ticker1_holding * 1.01 + expected_ticker2_holding * 1.9,
-                        expected_ticker1_holding * 1.02 + expected_ticker2_holding * 1.8,
-                        expected_ticker1_holding * 1.03 + expected_ticker2_holding * 1.7,
-                    ],
-                    index=[
-                        datetime(2016, 1, 1),
-                        datetime(2016, 1, 2),
-                        datetime(2016, 1, 3),
-                        datetime(2016, 1, 4),
-                    ]
-                )
-            })
-        )
+        expected_frame = pd.DataFrame({
+            "Close": pd.Series(
+                [
+                    expected_ticker1_holding * 1 + expected_ticker2_holding * 2,
+                    expected_ticker1_holding * 1.01 + expected_ticker2_holding * 1.9,
+                    expected_ticker1_holding * 1.02 + expected_ticker2_holding * 1.8,
+                    expected_ticker1_holding * 1.03 + expected_ticker2_holding * 1.7,
+                ],
+                index=[
+                    datetime(2016, 1, 1),
+                    datetime(2016, 1, 2),
+                    datetime(2016, 1, 3),
+                    datetime(2016, 1, 4),
+                ]
+            )
+        })
+        self.assertTrue((trace.frame == expected_frame).all()["Close"])
+
