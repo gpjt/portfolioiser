@@ -16,9 +16,11 @@ for filename in os.listdir("data"):
     if min_date > cutoff:
         print("Failed {} with {}".format(ticker, min_date))
         fail.add(ticker)
-    else:
-        print("OK {} with {}".format(ticker, min_date))
-        success.add(ticker)
+        continue
+
+    print("Start date OK {} with {}".format(ticker, min_date))
+    success.add(ticker)
+
 
 print("Success: {}".format(success))
 print("Fail: {}".format(fail))
