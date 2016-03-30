@@ -27,3 +27,7 @@ print("Fail: {}".format(fail))
 
 print("Success count: {}".format(len(success)))
 print("Fail count: {}".format(len(fail)))
+
+with open("data/share_universe.csv", "w") as f:
+    for ticker in success:
+        f.write(ticker + "\n")
