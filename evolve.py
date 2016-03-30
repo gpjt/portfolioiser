@@ -1,7 +1,11 @@
 #!/usr/bin/env python3.4
 
+from datetime import datetime
+import pandas as pd
 import random
+import time
 
+from fitness_function import judge_fitness
 from portfolio import Portfolio
 
 
@@ -13,7 +17,19 @@ with open("data/share_universe.csv", "r") as f:
         universe.add(line.strip())
 print("Read {} tickers".format(len(universe)))
 
-POPULATION_SIZE = 5
+print("Loading market data")
+GLOBAL_START_DATE = datetime(2012, 7, 17)
+GLOBAL_END_DATE = datetime(2016, 3, 15)
+market_data = {}
+for ticker in universe:
+    frame = pd.read_csv("data/{}.csv".format(ticker), parse_dates=[0], index_col=0)
+    frame = frame.reindex(pd.date_range(GLOBAL_START_DATE, GLOBAL_END_DATE, freq="D"), method="ffill")
+    frame.fillna(method="ffill", inplace=True)
+    market_data[ticker] = frame
+print("Done loading, got market data for {} tickers".format(len(market_data)))
+
+
+POPULATION_SIZE = 1000
 PORTFOLIO_SIZE = 5
 print("Generating {} initial portfolios with {} stocks in each".format(POPULATION_SIZE, PORTFOLIO_SIZE))
 population = set()
@@ -23,7 +39,22 @@ for ii in range(POPULATION_SIZE):
     normalised_ratios = [(100 * ratio) / total for ratio in raw_ratios]
     stocks = random.sample(universe, PORTFOLIO_SIZE)
     portfolio = Portfolio(list(zip(stocks, normalised_ratios)))
+    population.add(portfolio)
+print("Done generating, got {} portfolios".format(len(population)))
 
 
+start_date = datetime(2013, 1, 1)
+end_date = datetime(2013, 12, 31)
+print("Judging fitness over {} to {}".format(start_date, end_date))
+start_time = time.time()
+ratings = []
+for portfolio in population:
+    trace = portfolio.trace(market_data, start_date, end_date)
+    ratings.append((judge_fitness(trace.frame), portfolio))
+print("Done judging, took {}s".format(time.time() - start_time))
+
+league_table = sorted(ratings, key=lambda element: element[0])
+for fitness, portfolio in league_table:
+    print("{} for {}".format(fitness, portfolio.holdings))
 
 

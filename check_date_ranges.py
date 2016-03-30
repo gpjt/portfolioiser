@@ -4,7 +4,6 @@ from datetime import datetime
 import os
 import pandas
 
-# First trading day of 2011
 cutoff = datetime(2012, 7, 17)
 
 success = set()
