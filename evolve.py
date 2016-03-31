@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.4
 
 from datetime import datetime
+import numpy as np
 import pandas as pd
 import random
 import time
@@ -57,30 +58,34 @@ for ii in range(GENERATIONS):
     for portfolio in population:
         trace = portfolio.trace(market_data, start_date, end_date)
         ratings.append((judge_fitness(trace.frame), portfolio))
-    print("Done judging, took {}s".format(time.time() - start_time))
+    print("Done collating fitness, took {}s.  About to sort".format(time.time() - start_time))
 
-    print("Culling...")
-    new_population = set()
-    # Kill weakest third plus any with zero rating
-    for rating, portfolio in ratings[int(len(ratings) / 3):]:
-        if rating != 0:
-            new_population.add(portfolio)
-    print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
+    start_time = time.time()
+    ratings = sorted(ratings, key=lambda element: element[0])
+    print("Done sorting, took {}s".format(time.time() - start_time))
 
-    new_portfolio_count = len(population) - len(new_population)
-    print("Generating {} new portfolios".format(new_portfolio_count))
-    for jj in range(new_portfolio_count):
-        new_population.add(generate_random_portfolio())
-    print("Done generating new portfolios")
+    print("Finished generation {}. Stats (min / max / average)")
+    rating_values = [rating for (rating, _) in ratings]
+    print("Rating: {} / {} / {}".format(min(rating_values), max(rating_values), np.mean(rating_values)))
+    print("Winner is {}".format(ratings[-1][1].holdings))
 
-    population = new_population
+    if ii < GENERATIONS - 1:
+        print("Culling...")
+        new_population = set()
+        # Kill weakest third plus any with zero rating
+        for rating, portfolio in ratings[int(len(ratings) / 3):]:
+            if rating != 0:
+                new_population.add(portfolio)
+        print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
+
+        new_portfolio_count = len(population) - len(new_population)
+        print("Generating {} new portfolios".format(new_portfolio_count))
+        for jj in range(new_portfolio_count):
+            new_population.add(generate_random_portfolio())
+        print("Done generating new portfolios")
+
+        population = new_population
 
 
-
-
-
-league_table = sorted(ratings, key=lambda element: element[0])
-for fitness, portfolio in league_table:
-    print("{} for {}".format(fitness, portfolio.holdings))
 
 
