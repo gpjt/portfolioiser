@@ -10,10 +10,10 @@ from fitness_function import judge_fitness
 from portfolio import Portfolio
 
 POPULATION_SIZE = 1000
-PORTFOLIO_SIZE = 5
+PORTFOLIO_SIZE = 8
 GLOBAL_START_DATE = datetime(2012, 7, 17)
 GLOBAL_END_DATE = datetime(2016, 3, 15)
-GENERATIONS = 2
+GENERATIONS = 3
 
 
 def generate_random_portfolio():
@@ -54,24 +54,32 @@ end_date = datetime(2013, 12, 31)
 for ii in range(GENERATIONS):
     print("Judging fitness over {} to {}".format(start_date, end_date))
     start_time = time.time()
-    rating_portfolios = []
+    metrics_portfolios = []
     for portfolio in population:
         trace = portfolio.trace(market_data, start_date, end_date)
         fitness, calmness, return_over_period = judge_fitness(trace.frame)
-        rating_portfolios.append((fitness, portfolio))
-    rating_portfolios = sorted(rating_portfolios, key=lambda element: element[0])
+        metrics_portfolios.append((fitness, calmness, return_over_period, portfolio))
+    metrics_portfolios = sorted(metrics_portfolios, key=lambda element: element[0])
     print("Done collating fitness, took {}s".format(time.time() - start_time))
 
     print("Finished generation {}. Stats (min / max / average)")
-    rating_values = [rating for (rating, _) in rating_portfolios]
-    print("Rating: {} / {} / {}".format(min(rating_values), max(rating_values), np.mean(rating_values)))
-    print("Winner is {}".format(rating_portfolios[-1][1].holdings))
+    fitnesses = [fitness for (fitness, _, _, _) in metrics_portfolios]
+    print("Fitness: {} / {} / {}".format(min(fitnesses), max(fitnesses), np.mean(fitnesses)))
+    calmnesses  = [calmness for (_, calmness, _, _) in metrics_portfolios]
+    print("Calmness: {} / {} / {}".format(min(calmnesses), max(calmnesses), np.mean(calmnesses)))
+    returns_over_period  = [return_over_period for (_, _, return_over_period, _) in metrics_portfolios]
+    print("Returns: {} / {} / {}".format(min(returns_over_period), max(returns_over_period), np.mean(returns_over_period)))
+    winner_fitness, winner_calmness, winner_returns_over_period, winner_porfolio = metrics_portfolios[-1]
+    print("Winner fitness {}".format(winner_fitness))
+    print("Winner calmness {}".format(winner_calmness))
+    print("Winner return {}".format(winner_returns_over_period))
+    print("Winner hodlings {}".format(winner_porfolio.holdings))
 
     if ii < GENERATIONS - 1:
         print("Culling...")
         new_population = set()
         # Kill weakest third plus any with zero rating
-        for rating, portfolio in rating_portfolios[int(len(rating_portfolios) / 3):]:
+        for rating, _, _, portfolio in metrics_portfolios[int(len(metrics_portfolios) / 3):]:
             if rating != 0:
                 new_population.add(portfolio)
         print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
