@@ -54,26 +54,24 @@ end_date = datetime(2013, 12, 31)
 for ii in range(GENERATIONS):
     print("Judging fitness over {} to {}".format(start_date, end_date))
     start_time = time.time()
-    ratings = []
+    rating_portfolios = []
     for portfolio in population:
         trace = portfolio.trace(market_data, start_date, end_date)
-        ratings.append((judge_fitness(trace.frame), portfolio))
-    print("Done collating fitness, took {}s.  About to sort".format(time.time() - start_time))
-
-    start_time = time.time()
-    ratings = sorted(ratings, key=lambda element: element[0])
-    print("Done sorting, took {}s".format(time.time() - start_time))
+        fitness, calmness, return_over_period = judge_fitness(trace.frame)
+        rating_portfolios.append((fitness, portfolio))
+    rating_portfolios = sorted(rating_portfolios, key=lambda element: element[0])
+    print("Done collating fitness, took {}s".format(time.time() - start_time))
 
     print("Finished generation {}. Stats (min / max / average)")
-    rating_values = [rating for (rating, _) in ratings]
+    rating_values = [rating for (rating, _) in rating_portfolios]
     print("Rating: {} / {} / {}".format(min(rating_values), max(rating_values), np.mean(rating_values)))
-    print("Winner is {}".format(ratings[-1][1].holdings))
+    print("Winner is {}".format(rating_portfolios[-1][1].holdings))
 
     if ii < GENERATIONS - 1:
         print("Culling...")
         new_population = set()
         # Kill weakest third plus any with zero rating
-        for rating, portfolio in ratings[int(len(ratings) / 3):]:
+        for rating, portfolio in rating_portfolios[int(len(rating_portfolios) / 3):]:
             if rating != 0:
                 new_population.add(portfolio)
         print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
