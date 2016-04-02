@@ -33,7 +33,9 @@ def mutate(portfolio):
     else:
         # Adjust size
         new_ratios = [weight for holding, weight in holdings]
-        new_ratios[change_holding_index] = new_ratios[change_holding_index] * (random.random() - 0.5)
+        new_ratios[change_holding_index] = new_ratios[change_holding_index] + (new_ratios[change_holding_index] * (random.random() - 0.5))
+        if new_ratios[change_holding_index] < 0:
+            raise Exception()
         total = sum(new_ratios)
         normalised_ratios = [(100 * ratio) / total for ratio in new_ratios]
         holdings = list(zip([holding for (holding, _) in holdings], normalised_ratios))
