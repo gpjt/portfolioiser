@@ -9,6 +9,6 @@ def judge_fitness(frame):
     if minimum_value < start_point * 0.95:
         fitness = 0
     else:
-        fitness = calmness * return_over_period
+        fitness = return_over_period
 
     return fitness, calmness, return_over_period

@@ -13,7 +13,7 @@ POPULATION_SIZE = 1000
 PORTFOLIO_SIZE = 8
 GLOBAL_START_DATE = datetime(2012, 7, 17)
 GLOBAL_END_DATE = datetime(2016, 3, 15)
-GENERATIONS = 3
+GENERATIONS = 10
 
 
 def generate_random_portfolio():
@@ -22,6 +22,22 @@ def generate_random_portfolio():
     normalised_ratios = [(100 * ratio) / total for ratio in raw_ratios]
     stocks = random.sample(universe, PORTFOLIO_SIZE)
     return Portfolio(list(zip(stocks, normalised_ratios)))
+
+
+def mutate(portfolio):
+    holdings = list(portfolio.holdings)
+    change_holding_index = random.randint(0, len(portfolio.holdings) - 1)
+    if random.random() < 0.5:
+        # Change the stock
+        holdings[change_holding_index] = (random.choice(list(universe)), holdings[change_holding_index][1])
+    else:
+        # Adjust size
+        new_ratios = [weight for holding, weight in holdings]
+        new_ratios[change_holding_index] = new_ratios[change_holding_index] * (random.random() - 0.5)
+        total = sum(new_ratios)
+        normalised_ratios = [(100 * ratio) / total for ratio in new_ratios]
+        holdings = list(zip([holding for (holding, _) in holdings], normalised_ratios))
+    return Portfolio(holdings)
 
 
 universe = set()
@@ -51,7 +67,7 @@ print("Done generating, got {} portfolios".format(len(population)))
 
 start_date = datetime(2013, 1, 1)
 end_date = datetime(2013, 12, 31)
-for ii in range(GENERATIONS):
+for generation in range(GENERATIONS):
     print("Judging fitness over {} to {}".format(start_date, end_date))
     start_time = time.time()
     metrics_portfolios = []
@@ -62,7 +78,7 @@ for ii in range(GENERATIONS):
     metrics_portfolios = sorted(metrics_portfolios, key=lambda element: element[0])
     print("Done collating fitness, took {}s".format(time.time() - start_time))
 
-    print("Finished generation {}. Stats (min / max / average)")
+    print("Finished generation {}. Stats (min / max / average)".format(generation))
     fitnesses = [fitness for (fitness, _, _, _) in metrics_portfolios]
     print("Fitness: {} / {} / {}".format(min(fitnesses), max(fitnesses), np.mean(fitnesses)))
     calmnesses  = [calmness for (_, calmness, _, _) in metrics_portfolios]
@@ -73,9 +89,9 @@ for ii in range(GENERATIONS):
     print("Winner fitness {}".format(winner_fitness))
     print("Winner calmness {}".format(winner_calmness))
     print("Winner return {}".format(winner_returns_over_period))
-    print("Winner hodlings {}".format(winner_porfolio.holdings))
+    print("Winner holdings {}".format(winner_porfolio.holdings))
 
-    if ii < GENERATIONS - 1:
+    if generation < GENERATIONS - 1:
         print("Culling...")
         new_population = set()
         # Kill weakest third plus any with zero rating
@@ -85,10 +101,17 @@ for ii in range(GENERATIONS):
         print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
 
         new_portfolio_count = len(population) - len(new_population)
-        print("Generating {} new portfolios".format(new_portfolio_count))
-        for jj in range(new_portfolio_count):
+        print("Need {} new portfolios".format(new_portfolio_count))
+
+        print("Creating 90% mutated portfolios")
+        for jj in range(int(new_portfolio_count * 0.9)):
+            new_population.add(mutate(random.choice(list(new_population))))
+        print("New population is now {}".format(len(new_population)))
+
+        print("Generating {} new random portfolios".format(new_portfolio_count * 0.1))
+        for jj in range(int(new_portfolio_count * 0.1)):
             new_population.add(generate_random_portfolio())
-        print("Done generating new portfolios")
+        print("Done generating new random portfolios")
 
         population = new_population
 
