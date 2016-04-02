@@ -13,7 +13,7 @@ POPULATION_SIZE = 1000
 PORTFOLIO_SIZE = 8
 GLOBAL_START_DATE = datetime(2012, 7, 17)
 GLOBAL_END_DATE = datetime(2016, 3, 15)
-GENERATIONS = 10
+GENERATIONS = 50
 
 
 def generate_random_portfolio():
@@ -70,6 +70,11 @@ print("Done generating, got {} portfolios".format(len(population)))
 start_date = datetime(2013, 1, 1)
 end_date = datetime(2013, 12, 31)
 for generation in range(GENERATIONS):
+    print()
+    print("*" * 80)
+    print("Generation {}".format(generation))
+    print("*" * 80)
+    print()
     print("Judging fitness over {} to {}".format(start_date, end_date))
     start_time = time.time()
     metrics_portfolios = []
