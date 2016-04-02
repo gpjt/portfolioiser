@@ -96,8 +96,8 @@ for generation in range(GENERATIONS):
     if generation < GENERATIONS - 1:
         print("Culling...")
         new_population = set()
-        # Kill weakest third plus any with zero rating
-        for rating, _, _, portfolio in metrics_portfolios[int(len(metrics_portfolios) / 3):]:
+        # Kill weakest half plus any with zero rating
+        for rating, _, _, portfolio in metrics_portfolios[int(len(metrics_portfolios) / 2):]:
             if rating != 0:
                 new_population.add(portfolio)
         print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
@@ -111,11 +111,12 @@ for generation in range(GENERATIONS):
         normalisation_factor = sum(reproduction_chance_unnormalised)
         reproduction_chance = [v / normalisation_factor for v in reproduction_chance_unnormalised]
         for jj in range(int(new_portfolio_count * 0.9)):
-            new_population.add(mutate(random.choice(list(new_population))))
+            new_population.add(mutate(np.random.choice(reproducing_population, None, p=reproduction_chance)))
         print("New population is now {}".format(len(new_population)))
 
-        print("Generating {} new random portfolios".format(new_portfolio_count * 0.1))
-        for jj in range(int(new_portfolio_count * 0.1)):
+        to_fill = POPULATION_SIZE - len(new_population)
+        print("Generating {} new random portfolios".format(to_fill))
+        for jj in range(to_fill):
             new_population.add(generate_random_portfolio())
         print("Done generating new random portfolios")
 
