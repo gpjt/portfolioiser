@@ -1,13 +1,33 @@
 #!/usr/bin/env python3.4
 
+import csv
 from datetime import datetime, timedelta
 import numpy as np
+import os
 import pandas as pd
 import random
+import sys
 import time
 
 from fitness_function import judge_fitness
 from portfolio import Portfolio
+
+if len(sys.argv) != 2:
+    print("Usage: evolve.py run_number")
+    sys.exit(-1)
+
+try:
+    run_number = int(sys.argv[1])
+except:
+    print("Can't parse {} as a run number".format(sys.argv[1]))
+    sys.exit(-2)
+
+run_dir = "runs/{}".format(run_number)
+if not os.path.isdir(run_dir):
+    os.makedirs(run_dir)
+
+
+
 
 POPULATION_SIZE = 20000
 PORTFOLIO_SIZE = 8
@@ -60,11 +80,32 @@ for ticker in universe:
 print("Done loading, got market data for {} tickers".format(len(market_data)))
 
 
-print("Generating {} initial portfolios with {} stocks in each".format(POPULATION_SIZE, PORTFOLIO_SIZE))
+generations_file_path = "{}/generations.csv".format(run_dir)
+generation_number = 0
 population = set()
-for ii in range(POPULATION_SIZE):
-    population.add(generate_random_portfolio())
-print("Done generating, got {} portfolios".format(len(population)))
+if not os.path.isfile(generations_file_path):
+    print("Generating {} initial portfolios with {} stocks in each".format(POPULATION_SIZE, PORTFOLIO_SIZE))
+    for ii in range(POPULATION_SIZE):
+        population.add(generate_random_portfolio())
+    print("Done generating, got {} portfolios".format(len(population)))
+else:
+    print("Reading generations file")
+    with open(generations_file_path, "r") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            generation_number = int(row[0])
+    print("Generation number is {}".format(generation_number))
+    current_population_file = "{}/population_after_{}.csv".format(run_dir, generation_number)
+    print("Reading in population from {}".format(current_population_file))
+    with open(current_population_file, "r") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            holdings = [holding.split(":") for holding in row]
+            holdings = [(ticker, float(quantity)) for (ticker, quantity) in holdings]
+            population.add(Portfolio(holdings))
+    print("Read {} portfolios".format(len(population)))
+    generation_number += 1
+    print("Restarting at generation {}".format(generation_number))
 
 
 start_dates = [
@@ -77,7 +118,7 @@ start_dates = [
     datetime(2015, 3, 2),
 ]
 
-for generation in range(GENERATIONS):
+for generation in range(generation_number, GENERATIONS):
     if generation > 32 and generation < GENERATIONS - 1:
         if generation % 5 == 0:
             start_date = start_dates[-1]
@@ -150,6 +191,20 @@ for generation in range(GENERATIONS):
 
         population = new_population
 
+    current_population_file = "{}/population_after_{}.csv".format(run_dir, generation)
+    with open(current_population_file, "w") as f:
+        writer = csv.writer(f)
+        for portfolio in population:
+            writer.writerow([
+                "{}:{}".format(ticker, quantity)
+                for (ticker, quantity) in portfolio.holdings
+            ])
+    with open(generations_file_path, "a") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            str(generation),
+            str(min(fitnesses)), str(max(fitnesses)), str(np.mean(fitnesses)),
 
+        ])
 
 
