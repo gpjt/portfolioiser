@@ -175,13 +175,18 @@ for generation in range(generation_number, GENERATIONS):
         print("Need {} new portfolios".format(new_portfolio_count))
 
         print("Creating 90% mutated portfolios weighting reproduction chances to highest-ranked")
+        start_time = time.time()
         reproducing_population = [portfolio for (_, _, _, portfolio) in metrics_portfolios]
         reproduction_chance_unnormalised = range(len(reproducing_population))
         normalisation_factor = sum(reproduction_chance_unnormalised)
         reproduction_chance = [v / normalisation_factor for v in reproduction_chance_unnormalised]
         for jj in range(int(new_portfolio_count * 0.9)):
             new_population.add(mutate(np.random.choice(reproducing_population, None, p=reproduction_chance)))
-        print("New population is now {}".format(len(new_population)))
+        print(
+            "Done mutating, took {}s.  New population is now {}".format(
+                time.time() - start_time, len(new_population)
+            )
+        )
 
         to_fill = POPULATION_SIZE - len(new_population)
         print("Generating {} new random portfolios".format(to_fill))
