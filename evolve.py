@@ -33,7 +33,7 @@ POPULATION_SIZE = 20000
 PORTFOLIO_SIZE = 8
 GLOBAL_START_DATE = datetime(2012, 7, 17)
 GLOBAL_END_DATE = datetime(2016, 3, 15)
-GENERATIONS = 750
+GENERATIONS = 477
 
 
 def generate_random_portfolio():
@@ -119,14 +119,18 @@ start_dates = [
 ]
 
 for generation in range(generation_number, GENERATIONS):
-    if generation > 32 and generation < GENERATIONS - 1:
-        if generation % 5 == 0:
-            start_date = start_dates[-1]
-        else:
-            start_date = random.choice(start_dates)
+    if generation == GENERATIONS - 1:
+        start_date = GLOBAL_START_DATE
+        end_date = GLOBAL_END_DATE
     else:
-        start_date = start_dates[-1]
-    end_date = start_date + timedelta(days=365)
+        if generation > 32:
+            if generation % 5 == 0:
+                start_date = start_dates[-1]
+            else:
+                start_date = random.choice(start_dates)
+        else:
+            start_date = start_dates[-1]
+        end_date = start_date + timedelta(days=365)
 
 
     print()
@@ -159,17 +163,27 @@ for generation in range(generation_number, GENERATIONS):
     for ticker, holding in winner_porfolio.holdings:
         print("{}, {}".format(ticker, holding))
 
-    if generation < GENERATIONS - 1:
-        print("Culling...")
-        new_population = set()
-        # Kill weakest half plus any with zero rating
+    print("Culling...")
+    new_population = set()
+    # Kill weakest half plus any with zero rating
+    survivors_after_file = "{}/survivors_after_{}.csv".format(run_dir, generation)
+    with open(survivors_after_file, "w") as f:
+        writer = csv.writer(f)
         for rating, _, _, portfolio in metrics_portfolios[int(len(metrics_portfolios) / 2):]:
             if rating != 0:
                 new_population.add(portfolio)
-        print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
-        if len(new_population) < 100:
-            print("BAILOUT extinction-level event")
-            raise Exception()
+                writer.writerow(
+                    [rating] + [
+                        "{}:{}".format(ticker, quantity)
+                        for (ticker, quantity) in portfolio.holdings
+                    ]
+                )
+    print("{} survivors ({}%)".format(len(new_population), len(new_population) * 100 / len(population)))
+    if len(new_population) < 100:
+        print("BAILOUT extinction-level event")
+        raise Exception()
+
+    if generation < GENERATIONS - 1:
 
         new_portfolio_count = len(population) - len(new_population)
         print("Need {} new portfolios".format(new_portfolio_count))
